@@ -1,0 +1,242 @@
+/To compute the sum of the squares of the first n integers 
+    ORG 100 /Program starts at addr 100
+
+/READ FIRST CHARACTER    
+CIF1, SKI          /SKIP IF INPUT FLAG IS SET
+      BUN CIF1     /LOOP UNTIL INPUT FLAF IS SET
+      INP          /READS IN ONE CHARACTER
+      ADD NOF      /ADD - 30 HEX
+      STA MSD      /STORE VALUE INTO MSD
+      CLA          /CLEAR AC REGISTER
+
+/READ SECOND CHARACTER
+CIF2, SKI
+      BUN CIF2
+      INP
+      ADD NOF
+      STA LSD
+      CLA
+
+/Multiply each character by it's place value
+LOP,  CLE    		/CLEAR E
+      LDA X		/X MULTIPLIER
+      CIR		/TRANSFER MULTIPLIER BIT TO E
+      STA X		/STORE SHIFTED MULTIPLIER
+      SZE		/CHECK IF BIT IS ZERO
+      BUN ONE		/IF BIT IS ONE; GO TO ONE
+      BUN ZRO		/IF BIT IS ZERO; GO TO ZRO
+ONE,  LDA MSD		/LOAD MSD TO MULTIPLY
+      ADD P		/ADD TO PARTIAL PRODUCT
+      STA P		/STORE PARTIAL PRODUCT
+      CLE		/CLEAR E
+ZRO,  LDA MSD		/LOAD MSD TO MULTIPLY
+      CIL		/SHIFT LEFT
+      STA MSD		/STORE SHIFTED MULTIPLICAND
+      ISZ CTR		/INCREMENT COUNTER
+      BUN LOP		/COUNTER NOT ZERO, REPEAT LOOP
+
+/We do not need to multiply by ones place
+
+/We add the to numbers together. We will use that as a counter
+      LDA P		/Load Product to AC
+      ADD LSD		/Add operand from LSD
+      STA CNT		/CNT is counter
+      CLA		/Clear AC
+
+/Setting the counter for loop
+      LDA CNT		/Load into AC
+      CMA		/complement AC
+      INC		/increment AC
+      STA I		/Store it in I
+      CLA		/Clear AC
+
+/Performing the arithmetic with a loop
+LOOP, LDA I		/Load I into AC
+      CMA		/Complement to make it positive
+      INC		/Increment AC
+      STA TEMP	/store the value in TEMP and SELF
+      CLA
+      LDA TEMP
+      STA SELF
+      CLA
+      LDA RES		/Load RES to reset counter
+      STA CTR
+      CLA
+      LDA RPRO	/Load RPRO to reset PRO
+      STA PRO
+      CLA
+      CLE
+/We will multiply each number by itself first
+ILOP, LDA TEMP	/TEMP MULTIPLIER
+      CIR		/TRANSFER MULTIPLIER BIT TO E
+      STA TEMP	/STORE SHIFTED MULTIPLIER
+      SZE		/CHECK IF BIT IS ZERO
+      BUN ON		/IF BIT IS ONE; GO TO ONE
+      BUN OFF		/IF BIT IS ZERO; GO TO ZRO
+ON,   LDA SELF	/LOAD SELF TO MULTIPLY
+      ADD PRO		/ADD TO PARTIAL PRODUCT
+      STA PRO		/STORE PARTIAL PRODUCT
+      CLE		/CLEAR E
+OFF,  LDA SELF	/LOAD SELF TO MULTIPLY
+      CIL		/SHIFT LEFT
+      STA SELF	/STORE SHIFTED MULTIPLICAND
+      ISZ CTR		/INCREMENT COUNTER
+      BUN ILOP	/COUNTER NOT ZERO, REPEAT LOOP
+      CLA
+/After the number is multiplied. We add
+      LDA PRO		/Load the product into AC
+      ADD SUM		/Add the previous sum and product together
+      STA SUM		/Store all back into SUM
+      CLA		/Clear AC
+      ISZ I		/Increment counter
+      BUN LOOP	/Counter not zero, repeat loop
+      
+/FIRST CHARACTER
+      LDA SUM		/Loads sum
+      AND CH1		/gets the first character
+      CIR		/shifting to get the value in right place
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      STA CHTP	/store temp value
+      CLA
+      LDA CHTP
+      ADD TEN
+      SNA		/skip if negative
+      BUN POS1
+      BUN NEG1
+POS1, LDA CHTP
+      ADD LOF		/adds 37 HEX
+      OUT		/character output
+      BUN NEXT1	/goes to the next character
+NEG1, LDA CHTP
+      ADD POF		/adds 30 HEX 
+      OUT		/character output
+      BUN NEXT1	/goes to the next character
+
+/SECOND CHARACTER
+NEXT1,CLA
+      LDA RPRO
+      STA CHTP
+      CLA
+      LDA SUM		/Loads sum
+      AND CH2		/gets the second character
+      CIR		/shifting to get the value in right place
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      CIR
+      STA CHTP
+      CLA
+      LDA CHTP
+      ADD TEN		
+      SNA		/skip if negative
+      BUN POS2
+      BUN NEG2
+POS2, CLA
+      LDA CHTP
+      ADD LOF
+      OUT
+      BUN NEXT2	/goes to the next character
+NEG2, CLA
+      LDA CHTP
+      ADD POF
+      OUT
+      BUN NEXT2	/goes to the next character
+
+
+/THIRD CHARACTER
+NEXT2,CLA
+      LDA RPRO
+      STA CHTP
+      CLA
+      LDA SUM		/Loads sum
+      AND CH3		/gets the third character
+      CIR		/shifting to get the value in right place
+      CIR
+      CIR
+      CIR
+      STA CHTP
+      CLA
+      LDA CHTP
+      ADD TEN
+      SNA		/skip is negative
+      BUN POS3
+      BUN NEG3
+POS3, CLA
+      LDA CHTP
+      ADD LOF
+      OUT
+      BUN NEXT3	/goes to the next character
+NEG3, CLA
+      LDA CHTP
+      ADD POF
+      OUT
+      BUN NEXT3	/goes to the next character
+
+
+/FOURTH CHARACTER
+NEXT3,CLA
+      LDA RPRO
+      STA CHTP
+      CLA
+      LDA SUM		/Loads sum
+      AND CH4		/gets the fourth character
+      STA CHTP
+      CLA
+      LDA CHTP
+      ADD TEN
+      SNA		/skip if negative
+      BUN POS4
+      BUN NEG4
+POS4, CLA
+      LDA CHTP
+      ADD LOF
+      OUT
+      BUN NEXT4	/goes to the end of program
+NEG4, CLA
+      LDA CHTP
+      ADD POF
+      OUT
+      BUN NEXT4	/goes to the end of program
+
+NEXT4,CLA
+
+HLT
+
+/Variables I need
+CTR, DEC -8
+RES, DEC -8
+P,   HEX 0000
+X,   HEX 000A
+MSD, DEC 0
+LSD, DEC 0
+NOF, HEX -30
+POF, HEX 30
+LOF, HEX 37
+CNT, DEC 0
+I,   DEC 0
+TEMP,DEC 0
+SELF,DEC 0
+SUM, DEC 0
+PRO, DEC 0
+RPRO,DEC 0
+CH4, HEX 000F
+CH3, HEX 00F0
+CH2, HEX 0F00
+CH1, HEX F000
+CHTP,HEX 0000
+TEN, DEC -10
+
+    END
